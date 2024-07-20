@@ -14,8 +14,11 @@ CHARACTER_NAME = os.getenv("CHARACTER_NAME")
 
 
 # Priority list of ores to be mined, ordered by value
-ORE_PRIORITIES = [
-    "melvorAoD:Pure_Crystal",
-    "melvorTotH:Corundumite_Ore",
-    "melvorD:Dragonite_Ore",
-]
+ORE_PRIORITIES = {
+    "primary_ore": "melvorAoD:Pure_Crystal",
+    "fallback_ores": [
+        "melvorTotH:Corundumite_Ore",
+        "melvorD:Dragonite_Ore",
+        # Add more ores here as needed
+    ],
+}
