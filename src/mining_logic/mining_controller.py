@@ -9,43 +9,60 @@ from .mining_actions import mine_ore, retry
 
 def continuous_mining(driver):
     """
-    Continuously mine with a primary focus on Pure_Crystal, switching only necessary.
+    Continuously mine with a focus on the primary ore, switching to fallback ores only when necessary,
+    and revert back to the primary ore when it fully respawns.
     Args:
-        driver : The Selenium WebDriver instance used to control the browser.
+        driver: The Selenium WebDriver instance used to control the browser.
     """
     logging.info("Starting continuous mining operation.")
     currently_mining = None  # Track the ore currently being mined
 
     try:
         while True:
-            ores_data = fetch_ore_data(driver)  # Fetching ore data including maxHP
+            ores_data = fetch_ore_data(driver)
+            primary_ore = settings.ORE_PRIORITIES["primary_ore"]
+            primary_ore_data = ores_data.get(primary_ore, None)
 
-            # Check if primary ore Pure_Crystal is available and prioritize its mining if it's not what's currently being mined
-            primary_ore_data = ores_data.get(
-                settings.ORE_PRIORITIES["primary_ore"], None
+            # Log current status of the primary ore
+            logging.info(
+                f"Status of {primary_ore}: Current HP = {primary_ore_data['currentHP']}, Max HP = {primary_ore_data['maxHP']}"
             )
-            if primary_ore_data and primary_ore_data["currentHP"] > 0:
-                if currently_mining != settings.ORE_PRIORITIES["primary_ore"]:
-                    logging.info(
-                        f"{settings.ORE_PRIORITIES['primary_ore']} is available with HP {primary_ore_data['currentHP']}, switching to mine it."
-                    )
-                    mine_ore(driver, settings.ORE_PRIORITIES["primary_ore"])
-                    currently_mining = settings.ORE_PRIORITIES["primary_ore"]
+
+            # Check if the primary ore has fully respawned and currently not mining it
+            if primary_ore_data["currentHP"] == primary_ore_data["maxHP"] and (
+                currently_mining != primary_ore
+            ):
+                logging.info(
+                    f"{primary_ore} has fully respawned with Max HP {primary_ore_data['maxHP']}, switching to mine it."
+                )
+                mine_ore(driver, primary_ore)
+                currently_mining = primary_ore
                 continue
 
-            # Mine fallback ores only if primary ore is not available
-            for ore in settings.ORE_PRIORITIES["fallback_ores"]:
-                ore_data = ores_data.get(ore, None)
-                if ore_data and ore_data["currentHP"] > 0:
-                    if currently_mining != ore:
+            # If the primary ore is not being mined and no ore is being mined or current ore depleted
+            if (
+                currently_mining is None
+                or ores_data[currently_mining]["currentHP"] <= 0
+            ):
+                # Iterate over fallback ores if the primary ore is depleted or respawning
+                for ore in settings.ORE_PRIORITIES["fallback_ores"]:
+                    ore_data = ores_data.get(ore, None)
+                    if ore_data and ore_data["currentHP"] > 0:
                         logging.info(
                             f"Starting mining on fallback ore {ore} with HP {ore_data['currentHP']}"
                         )
                         mine_ore(driver, ore)
                         currently_mining = ore
-                        break  # Mine one ore at a time
+                        break
 
-            time.sleep(10)  # Delay before rechecking ore status
+            # If currently mining some ore and it's not depleted, continue mining
+            elif currently_mining and ores_data[currently_mining]["currentHP"] > 0:
+                logging.info(
+                    f"Continuing to mine {currently_mining}. Current HP: {ores_data[currently_mining]['currentHP']}"
+                )
+                time.sleep(5)  # Mimic ongoing mining activity
+
+            time.sleep(5)  # Slight delay before rechecking ore statuses
 
     except Exception as e:
         logging.error(f"Error during mining operation: {e}")

@@ -100,7 +100,7 @@ def mine_ore(driver, ore_name):
 
         initial_hp = retry(lambda: driver.execute_script(script))
         if initial_hp is not None and initial_hp > 0:
-            time.sleep(15)
+            time.sleep(30)
             current_hp = driver.execute_script(
                 "return game.mining.selectedRock.currentHP"
             )
