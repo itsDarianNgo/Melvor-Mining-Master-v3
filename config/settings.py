@@ -22,3 +22,9 @@ ORE_PRIORITIES = {
         # Add more ores here as needed
     ],
 }
+
+GLOVE_MAP = {
+    "melvorAoD:Pure_Crystal": "Mining_Gloves",
+    "melvorTotH:Corundumite_Ore": "Gem_Gloves",
+    "melvorD:Dragonite_Ore": "Gem_Gloves",
+}

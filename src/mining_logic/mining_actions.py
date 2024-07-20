@@ -98,25 +98,14 @@ def mine_ore(driver, ore_name):
             """
         )
 
+        # Execute the mining script and handle the immediate outcome
         initial_hp = retry(lambda: driver.execute_script(script))
-        if initial_hp is not None and initial_hp > 0:
-            time.sleep(30)
-            current_hp = driver.execute_script(
-                "return game.mining.selectedRock.currentHP"
-            )
-            if current_hp < initial_hp:
-                logging.info(
-                    f"Mining successful. Initial HP: {initial_hp}, Current HP: {current_hp}"
-                )
-            else:
-                raise AssertionError(
-                    f"Expected HP decrement after mining, but found Initial HP: {initial_hp}, Current HP: {current_hp}"
-                )
-        else:
+        if initial_hp is None or initial_hp <= 0:
             raise AssertionError("Failed to select and mine the specified rock.")
+
     except WebDriverException as e:
         logging.error("WebDriverException occurred during mining operation.")
         raise e
     except AssertionError as e:
-        logging.error(e)
-        raise e
+        logging.error(str(e))
+        raise

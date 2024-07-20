@@ -4,6 +4,7 @@ import logging
 import time
 
 import config.settings as settings
+from src.equipment_optimization.glove_switching import switch_gloves_if_needed
 from .mining_actions import mine_ore, retry
 
 
@@ -35,6 +36,7 @@ def continuous_mining(driver):
                 logging.info(
                     f"{primary_ore} has fully respawned with Max HP {primary_ore_data['maxHP']}, switching to mine it."
                 )
+                switch_gloves_if_needed(driver, primary_ore)
                 mine_ore(driver, primary_ore)
                 currently_mining = primary_ore
                 continue
@@ -51,6 +53,7 @@ def continuous_mining(driver):
                         logging.info(
                             f"Starting mining on fallback ore {ore} with HP {ore_data['currentHP']}"
                         )
+                        switch_gloves_if_needed(driver, ore)
                         mine_ore(driver, ore)
                         currently_mining = ore
                         break
